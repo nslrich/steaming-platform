@@ -15,7 +15,7 @@ function Movies(props) {
   // Render
   return (
     <div>
-
+      MOVIES
     </div>
   )
 };

@@ -15,7 +15,7 @@ function Shows(props) {
   // Render
   return (
     <div>
-
+      SHOWS
     </div>
   )
 };

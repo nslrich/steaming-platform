@@ -15,7 +15,7 @@ function Home(props) {
   // Render
   return (
     <div>
-
+      HOME
     </div>
   )
 };

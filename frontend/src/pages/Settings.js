@@ -15,7 +15,7 @@ function Settings(props) {
   // Render
   return (
     <div>
-
+      SETTINGS
     </div>
   )
 };

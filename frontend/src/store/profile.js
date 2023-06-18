@@ -25,7 +25,7 @@ export const profile = createSlice({
 });
 
 // Functions to change state
-export const { increment, decrement, incrementByAmount } = counterSlice.actions;
+export const { increment, decrement, incrementByAmount } = profile.actions;
 
 // Default export for store creation
 export default profile.reducer;

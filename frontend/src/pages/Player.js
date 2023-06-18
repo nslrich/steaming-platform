@@ -15,7 +15,7 @@ function Player(props) {
   // Render
   return (
     <div>
-
+      PLAYER
     </div>
   )
 };
