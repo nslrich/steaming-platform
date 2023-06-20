@@ -9,23 +9,19 @@ export const profile = createSlice({
     first_name: null,
     last_name: null,
     role: null,
-    value: 0,
   },
   reducers: {
-    increment: (state) => {
-      state.value += 1
-    },
-    decrement: (state) => {
-      state.value -= 1
-    },
-    incrementByAmount: (state, action) => {
-      state.value += action.payload
+    setUser: (state, action) => {
+      state.id = action.payload.id;
+      state.first_name = action.payload.first_name;
+      state.last_name = action.payload.last_name;
+      state.role = action.payload.role;
     },
   },
 });
 
 // Functions to change state
-export const { increment, decrement, incrementByAmount } = profile.actions;
+export const { setUser } = profile.actions;
 
 // Default export for store creation
 export default profile.reducer;

@@ -1,7 +1,6 @@
 // React
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { RouterProvider } from "react-router-dom";
 
 // Redux
 import { Provider } from 'react-redux';
@@ -9,11 +8,8 @@ import { Provider } from 'react-redux';
 // Redux Store
 import store from './store/store';
 
-// Custon Router
-import { router } from './router/routes';
-
 // Custom Components
-import NavBar from './components/NavBar';
+import Router from './router/Router';
 
 // Global styling
 import './styling/index.scss';
@@ -22,7 +18,6 @@ import './styling/index.scss';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <Provider store={store}>
-    <NavBar />
-    <RouterProvider router={router} />
+    <Router />
   </Provider>
 );
