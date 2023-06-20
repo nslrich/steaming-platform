@@ -17,32 +17,45 @@ import SplashScreen from '../pages/SplashScreen';
 function Router(props) {
 
   // State
-  const [splashScreen, setSplashScreen] = useState(false);
+  const [splashScreen, setSplashScreen] = useState(true);
   const [firstTimeSetup, setFirstTimeSetup] = useState(false);
-  const [authenticated, setAuthenticated] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
 
   // On page load, check for token
   useEffect(() => {
 
     // Check to see if this is the first time using the app
-    // axios.get().then((response) => {
+    axios.get('/first_time_check').then((response) => {
 
-    // }).catch((error) => {
+      // Check response
+      if (response.data === true) {
 
-    // });
+        // Run first time setup
+        setFirstTimeSetup(true);
+        setSplashScreen(false);
 
-    // Get token from local storage
-    const token = localStorage.getItem('token');
+      } else {
 
-    // Make sure token is there
-    if (token !== null) {
+        // Get token from local storage
+        const token = localStorage.getItem('token');
 
-      // Validate token
-      setAuthenticated(true);
+        // Make sure token is there
+        if (token !== null) {
 
-    }
+          // Validate token
+          setAuthenticated(true);
+          setSplashScreen(false);
 
+        } else {
 
+          // Validate token
+          setAuthenticated(false);
+          setSplashScreen(false);
+        }
+      }
+    }).catch((error) => {
+      console.log(error);
+    });
 
   }, []);
 
