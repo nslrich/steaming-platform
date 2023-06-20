@@ -4,7 +4,11 @@
 
 // Custom Components
 
+// Icons
+import { AiOutlineMenu } from 'react-icons/ai';
+
 // Styling
+import '../styling/components/NavBar.scss';
 
 // Main
 function NavBar(props) {
@@ -14,8 +18,10 @@ function NavBar(props) {
 
   // Render
   return (
-    <div style={{width: '100%', height: '50px', background: 'black', color: 'white'}}>
-      NAVBAR
+    <div className='nav-bar'>
+      <div className='nav-bar-item'>
+        <AiOutlineMenu color='white' size={20}/>
+      </div>
     </div>
   )
 };

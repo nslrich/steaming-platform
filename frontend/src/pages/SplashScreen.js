@@ -12,11 +12,11 @@ function SplashScreen(props) {
 
   // State
 
-
+  
   // Render
   return (
     <div className="splash-screen">
-      SPLASH SCREEN
+      <img src='/assets/logo.svg'/>
     </div>
   )
 };

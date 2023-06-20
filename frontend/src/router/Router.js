@@ -10,15 +10,16 @@ import { router } from './routes';
 import Login from '../pages/Login';
 import NavBar from '../components/NavBar';
 import Setup from '../pages/Setup';
+import SideBar from '../components/SideBar';
 import SplashScreen from '../pages/SplashScreen';
 
 // Main
 function Router(props) {
 
   // State
-  const [splashScreen, setSplashScreen] = useState(true);
+  const [splashScreen, setSplashScreen] = useState(false);
   const [firstTimeSetup, setFirstTimeSetup] = useState(false);
-  const [authenticated, setAuthenticated] = useState(false);
+  const [authenticated, setAuthenticated] = useState(true);
 
   // On page load, check for token
   useEffect(() => {
@@ -41,8 +42,8 @@ function Router(props) {
 
     }
 
-    
-    
+
+
   }, []);
 
   // Render
@@ -58,8 +59,14 @@ function Router(props) {
                 {/* Nav Bar */}
                 <NavBar />
 
-                {/* Routes */}
-                <RouterProvider router={router} />
+                <div className='main-content'>
+
+                  {/* Side Bar */}
+                  <SideBar />
+
+                  {/* Routes */}
+                  <RouterProvider router={router} />
+                </div>
               </>
             )
             : <Login />

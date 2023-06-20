@@ -10,7 +10,10 @@
 
 
   // Background colors
-  --primary-background-color: #121212;
+  --primary-background-color: #212121;
+  --secondary-background-color: #0F0F0F;
+  --tertiary-background-color: #1A1A1A;
+
 }
 
 body {
@@ -26,4 +29,10 @@ body {
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: row;
+  height: calc(100vh - 44px);
 }
