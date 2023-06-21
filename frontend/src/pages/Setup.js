@@ -4,13 +4,13 @@ import { useState } from 'react';
 // Redux
 
 // Custom Components
+import SetupStep1 from '../components/SetupStep1';
+import SetupStep2 from '../components/SetupStep2';
+import SetupStep3 from '../components/SetupStep3';
 
 // Icons
 import { BsArrowRight } from 'react-icons/bs';
 import { RiNumber1, RiNumber2, RiNumber3 } from 'react-icons/ri';
-
-// Styling
-import '../styling/pages/Setup.scss';
 
 // Main
 function Setup(props) {
@@ -18,87 +18,150 @@ function Setup(props) {
   // State
   const [step, setStep] = useState(1);
 
+  // State for step 2
+  const [stateStep2, setStateStep2] = useState({
+    first_name: '',
+    last_name: '',
+    username: '',
+    password: '',
+    confirm: ''
+  });
+
+  // State for step 3
+  const [stateStep3, setStateStep3] = useState({
+    movie_location: '',
+    show_location: ''
+  });
+
+  // Function to verify if all fields where properly filled out for step 2
+  const verifyStep2 = () => {
+
+    // Failure check variable
+    var fail = false;
+
+    // Check first name
+    if (stateStep2.first_name === '') {
+      document.getElementById('first_name').classList.add('border-rose-500');
+      fail = true;
+    } else {
+      document.getElementById('first_name').classList.remove('border-rose-500');
+    }
+
+    // Check last name
+    if (stateStep2.first_name === '') {
+      document.getElementById('last_name').classList.add('border-rose-500');
+      fail = true;
+    } else {
+      document.getElementById('last_name').classList.remove('border-rose-500');
+    }
+
+    // Check username
+    if (stateStep2.first_name === '') {
+      document.getElementById('user_name').classList.add('border-rose-500');
+      fail = true;
+    } else {
+      document.getElementById('user_name').classList.remove('border-rose-500');
+    }
+
+    // Check passwords
+    if (stateStep2.password === '' || stateStep2.confirm === '') {
+      document.getElementById('password1').classList.add('border-rose-500');
+      document.getElementById('password2').classList.add('border-rose-500');
+      fail = true;
+    } else if (stateStep2.password !== stateStep2.confirm) {
+      document.getElementById('password1').classList.add('border-rose-500');
+      document.getElementById('password2').classList.add('border-rose-500');
+      fail = true;
+    } else {
+      document.getElementById('password1').classList.remove('border-rose-500');
+      document.getElementById('password2').classList.remove('border-rose-500');
+    }
+
+    // Check to see if anything failed
+    if (!fail) {
+
+      // Next step
+      setStep(step + 1);
+    }
+  }
+
+  // Function to verify if all fields where properly filled out for step 3
+  const verifyStep3 = () => {
+
+    // Failure check variable
+    var fail = false;
+
+    // Check first name
+    if (stateStep3.movie_location === '') {
+      document.getElementById('movie_location').classList.add('border-rose-500');
+      fail = true;
+    } else {
+      document.getElementById('movie_location').classList.remove('border-rose-500');
+    }
+
+    // Check first name
+    if (stateStep3.show_location === '') {
+      document.getElementById('show_location').classList.add('border-rose-500');
+      fail = true;
+    } else {
+      document.getElementById('show_location').classList.remove('border-rose-500');
+    }
+
+    // Check to see if anything failed
+    if (!fail) {
+
+      // Next step
+
+    }
+  };
 
   // Render
   return (
-    <div className='setup'>
-      <div className='steps'>
+    <div className='h-screen bg-white dark:bg-neutral-800 flex flex-col justify-center items-center text-white'>
+      <div className='flex flex-row items-center gap-4 mb-4'>
 
-        <div className={step === 1 ? 'step current' : 'step'}>
+        <div className={step === 1 ? 'rounded-full p-4 bg-amber-400 text-black' : 'rounded-full p-4 bg-neutral-600'}>
           <RiNumber1 size={25} />
         </div>
 
         <BsArrowRight size={25} />
 
-        <div className={step === 2 ? 'step current' : 'step'}>
+        <div className={step === 2 ? 'rounded-full p-4 bg-amber-400 text-black' : 'rounded-full p-4 bg-neutral-600'}>
           <RiNumber2 size={25} />
         </div>
 
         <BsArrowRight size={25} />
 
-        <div className={step === 3 ? 'step current' : 'step'}>
+        <div className={step === 3 ? 'rounded-full p-4 bg-amber-400 text-black' : 'rounded-full p-4 bg-neutral-600'}>
           <RiNumber3 size={25} />
         </div>
       </div>
 
-      <div className='container txt-center'>
+      <div className='flex flex-col rounded-md p-8 bg-neutral-600 h-130 w-128'>
         {step === 1
-          ? (
-            <>
-              <h2>Welcome to Your Streamer</h2>
-              <div>This guide will help you setup Your Streamer.</div>
-            </>
-          )
+          ? <SetupStep1 />
           : step === 2
-            ? (
-              <>
-                <h2>Lets setup your account</h2>
-                <div className='input-group'>
-                  <label>First Name: </label>
-                  <input placeholder='John'></input>
-                </div>
-                <div className='input-group'>
-                  <label>Last Name: </label>
-                  <input placeholder='Doe'></input>
-                </div>
-                <div className='input-group'>
-                  <label>Username: </label>
-                  <input placeholder='john_doe'></input>
-                </div>
-                <div className='input-group'>
-                  <label>Password: </label>
-                  <input type='password'></input>
-                </div>
-                <div className='input-group'>
-                  <label>Confim: </label>
-                  <input type='password'></input>
-                </div>
-              </>
-            )
+            ? <SetupStep2 state={stateStep2} onStateChange={(newState) => setStateStep2(newState)} />
             : step === 3
-              ? (
-                <>
-                  <h2>Default Settings</h2>
-                  <div>Movie Location</div>
-                  <div>Show Location</div>
-                </>
-              )
+              ? <SetupStep3 state={stateStep3} onStateChange={(newState) => setStateStep3(newState)} />
               : null
         }
 
-        <div className='btn-bar flex-grow'>
+        <div className='flex justify-between'>
 
           <button
-            className='btn'
-            disabled={step === 1}
+            className='bg-amber-400 py-3 px-5 rounded-3xl text-black'
+            style={{ visibility: step === 1 ? 'hidden' : 'visible' }}
             onClick={(e) => setStep(step - 1)}
           >Back</button>
 
           <button
-            className='btn'
+            className='bg-amber-400 py-3 px-5 rounded-3xl text-black'
             onClick={(e) => {
               if (step === 3) {
 
+              } else if (step === 2) {
+                verifyStep2();
               } else {
                 setStep(step + 1);
               }
