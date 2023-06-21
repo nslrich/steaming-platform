@@ -41,7 +41,7 @@ function Setup(props) {
         </div>
       </div>
 
-      <div className='container'>
+      <div className='container txt-center'>
         {step === 1
           ? (
             <>
@@ -52,18 +52,18 @@ function Setup(props) {
           : step === 2
             ? (
               <>
-                <h2>Who are you?</h2>
+                <h2>Lets setup your account</h2>
                 <div className='input-group'>
                   <label>First Name: </label>
-                  <input></input>
+                  <input placeholder='John'></input>
                 </div>
                 <div className='input-group'>
                   <label>Last Name: </label>
-                  <input></input>
+                  <input placeholder='Doe'></input>
                 </div>
                 <div className='input-group'>
                   <label>Username: </label>
-                  <input></input>
+                  <input placeholder='john_doe'></input>
                 </div>
                 <div className='input-group'>
                   <label>Password: </label>
@@ -86,7 +86,7 @@ function Setup(props) {
               : null
         }
 
-        <div className='btn-bar'>
+        <div className='btn-bar flex-grow'>
 
           <button
             className='btn'
@@ -96,7 +96,13 @@ function Setup(props) {
 
           <button
             className='btn'
-            onClick={(e) => setStep(step + 1)}
+            onClick={(e) => {
+              if (step === 3) {
+
+              } else {
+                setStep(step + 1);
+              }
+            }}
           >{step === 3 ? 'Finish' : 'Next'}</button>
         </div>
       </div>
