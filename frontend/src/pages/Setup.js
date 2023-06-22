@@ -159,7 +159,7 @@ function Setup(props) {
             className='bg-amber-400 py-3 px-5 rounded-3xl text-black'
             onClick={(e) => {
               if (step === 3) {
-
+                verifyStep3();
               } else if (step === 2) {
                 verifyStep2();
               } else {

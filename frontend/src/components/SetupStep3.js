@@ -1,5 +1,5 @@
 // NPM Imports
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Redux
 
@@ -11,6 +11,22 @@ function SetupStep3({ state, onStateChange }) {
 
   // State
   const [showModal, setShowModal] = useState(false);
+  const [movieLocation, setMovieLocation] = useState(state.movie_location);
+  const [showLocation, setShowLocation] = useState(state.show_location);
+
+  // On Change of any of the state variables update the parent
+  useEffect(() => {
+
+    // Make a new state object
+    const newState = {
+      movie_location: movieLocation,
+      show_location: showLocation
+    };
+
+    // Pass to parent
+    onStateChange(newState);
+
+  }, [movieLocation, showLocation]);
 
   // Render
   return (
@@ -22,7 +38,7 @@ function SetupStep3({ state, onStateChange }) {
           <label htmlFor="movie_location" className="block text-sm font-medium leading-6 text-white">Movie Location</label>
 
           <div className='flex flex-row gap-2'>
-            <input type="text" disabled={true} name="movie_location" id="movie_location" placeholder="C:\..." className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6 disabled:bg-white" />
+            <input type="text" disabled={true} name="movie_location" id="movie_location" placeholder="C:\..." value={movieLocation} onChange={(e) => setMovieLocation(e.target.value)} className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6 disabled:bg-white" />
 
             <button className='bg-amber-400 rounded-md py-1.5 px-3 text-black'
               onClick={(e) => setShowModal(true)}
@@ -34,7 +50,7 @@ function SetupStep3({ state, onStateChange }) {
           <label htmlFor="show_location" className="block text-sm font-medium leading-6 text-white">Show Location</label>
 
           <div className='flex flex-row gap-2'>
-            <input type="text" disabled={true} name="show_location" id="show_location" placeholder="C:\..." className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6 disabled:bg-white" />
+            <input type="text" disabled={true} name="show_location" id="show_location" placeholder="C:\..." onChange={(e) => setMovieLocation(e.target.value)} className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6 disabled:bg-white" />
 
             <button className='bg-amber-400 rounded-md py-1.5 px-3 text-black'
               onClick={(e) => setShowModal(true)}

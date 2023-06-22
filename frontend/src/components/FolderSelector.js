@@ -1,4 +1,6 @@
 // NPM Imports
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 
 // Redux
 
@@ -11,7 +13,28 @@ import { BsArrow90DegUp, BsFolderPlus } from 'react-icons/bs';
 function FolderSelector({ showModal, onClose, onSelect }) {
 
   // State
+  const [path, setPath] = useState('');
+  const [folders, setFolders] = useState([]);
 
+  // On load get folders
+  useEffect(() => {
+    getFolders(null);
+  }, []);
+
+  // Function to get folders
+  const getFolders = (dir) => {
+
+    // Get request
+    axios.get('/api/folders', { params: { path: dir } }).then((response) => {
+
+      // Set state
+      setPath(response.data.path);
+      setFolders(response.data.folders);
+
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
 
   // Render
   return (
@@ -25,7 +48,14 @@ function FolderSelector({ showModal, onClose, onSelect }) {
               <h2 className='text-center text-2xl mb-4'>Select a folder</h2>
 
               <div className='flex flex-row justify-start mb-2 w-4/5 gap-2'>
-                <button className='rounded-md bg-neutral-400 bg px-3 py-2'>
+                <button 
+                  className='rounded-md bg-neutral-400 bg px-3 py-2'
+                  onClick={(e) => {
+                    var arr = path.split('\\');
+                    arr.pop();
+                    getFolders(arr.join('\\'));
+                  }}
+                >
                   <BsArrow90DegUp size={25} />
                 </button>
 
@@ -34,8 +64,16 @@ function FolderSelector({ showModal, onClose, onSelect }) {
                 </button>
               </div>
 
-              <div className="flex flex-col grow rounded-md bg-neutral-300 w-4/5 mb-4">
-
+              <div className="flex flex-col grow rounded-md bg-neutral-300 w-4/5 mb-4 p-1 overflow-auto text-black">
+                {folders.map((value, index) => (
+                  <div
+                    key={`folder-${index}`}
+                    className='hover:bg-neutral-400 cursor-pointer'
+                    onClick={(e) => getFolders(path + '\\' + value)}
+                  >
+                    {value}
+                  </div>
+                ))}
               </div>
 
               <div className='flex flex-row justify-between w-4/5'>
