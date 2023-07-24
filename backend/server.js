@@ -4,17 +4,32 @@ const os = require("os");
 const cors = require("cors");
 const path = require("path");
 const express = require('express');
+const { v4: uuidv4 } = require('uuid');
 const bodyParser = require("body-parser");
 const sqlite3 = require('sqlite3').verbose();
+
+// Helpers
+const { checkForData, setupDatabase, checkForDbFile, newUser, updateSaveLocations } = require('./helpers/databaseHelpers');
+const { getDirectories } = require('./helpers/generalHelpers');
 
 // Declare express port
 const port = 12501;
 
 // SQL files
-const sqlDbPath = `${__dirname}/databases/users.db`;
+const sqlDbPath = `${process.cwd()}/databases/data.db`;
 
-// SQL Lite databases
-var sqlDB = null;
+// Check for db file
+if (!fs.existsSync(sqlDbPath)) {
+
+  // Send back false, do not need to run setup
+  fs.writeFileSync(sqlDbPath, '');
+}
+
+// Setup SQLite client
+const sqlDB = new sqlite3.Database(sqlDbPath);
+
+// Make sure the database is ready
+setupDatabase(sqlDB);
 
 // Setup Express app
 const app = express();
@@ -22,100 +37,172 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Routes
-app.get('/first_time_check', (req, res) => {
+app.get('/api/first_time_check', async (req, res) => {
 
-  // Check to see if database is set up
-  if (fs.existsSync(sqlDbPath)) {
+  // Try Catch around everything to prevent crashing
+  try {
 
-    // Send back false, do not need to run setup
-    res.send(false);
-  } else {
+    // Check to see if database is set up
+    const setupCheck = await checkForData(sqlDB);
+    if (setupCheck == 1) {
 
-    // Send back true, need to run first time setup
-    res.send(true);
+      // Send back false, do not need to run setup
+      res.send({ code: 0, status: false });
+    } else {
+
+      // Send back true, need to run first time setup
+      res.send({ code: 0, status: true });
+    }
+  } catch (error) {
+
+    // Error
+    console.log(error);
+    res.status(500).send({ code: 400, msg: 'Unknown Error occured' });
   }
 });
 
 // First time setup
-app.post('/first_time_setup', (req, res) => {
+app.post('/api/first_time_setup', async (req, res) => {
 
-  // Check to see if database is set up
-  if (fs.existsSync(sqlDbPath)) {
+  // Try Catch around everything to prevent crashing
+  try {
 
-    // Error, already setup.
-    res.status(500).send({ code: 400, msg: 'First time setup has already been done.' });
+    // Check to see if setup has been done
+    const setupCheck = await checkForData(sqlDB);
+    if (setupCheck == 0) {
 
-  } else {
+      // Get body out of request
+      const body = req.body;
 
-    // Get body out of request
-    const body = req.body;
+      // Setup admin
+      const user = {
+        id: uuidv4(),
+        user_name: body.username,
+        password: body.password,
+        first_name: body.first_name,
+        last_name: body.last_name,
+        role: 'admin'
+      }
 
-    // Create user database file
-    fs.writeFileSync(sqlDbPath, '');
+      // Add new user to databse (admin)
+      const checkNewUser = await newUser(sqlDB, user);
+      if (checkNewUser) {
 
-    // Seetup sql lite databse
-    sqlDB = new sqlite3.Database(sqlDbPath);
+        // Update save locations
+        const saveCheck = await updateSaveLocations(sqlDB, { movies: body.movie_location, shows: body.show_location });
+        if (saveCheck) {
 
-    // Create user table
-    sqlDB.run('CREATE TABLE user (id INTEGER NOT NULL, user_name TEXT NOT NULL, password TEXT NOT NULL, first_name TEXT, last_name TEXT, role TEXT NOT NULL)');
+          // All done
+          res.send({ code: 0 });
 
-    // Add admin to table
-    db.run(insert, (error) => {
+        } else {
 
-      // Check for error
-      if (error) {
-
-        // Send error back to user
-        console.log(error);
-        res.status(500).send({ code: 400, msg: 'Unable to create user.' });
-
-        // Delete sql lite file (so setup can be re-run)
-        fs.rmSync(sqlDbPath);
-        sqlDB = null;
-
+          // Unable to create user
+          res.status(500).send({ code: 400, msg: 'Unable to setup save locations' });
+        }
       } else {
 
-        // Run other setup stuff here
+        // Unable to create user
+        res.status(500).send({ code: 400, msg: 'Unable to create user' });
       }
-    });
+    } else {
+
+      // Setup has already been done.
+      res.status(500).send({ code: 400, msg: 'First time setup has already been done' });
+    }
+  } catch (error) {
+
+    // Error
+    console.log(error);
+    res.status(500).send({ code: 400, msg: 'Unknown Error occured' });
   }
 });
 
 // Route to get folders in a given path
 app.get('/api/folders', async (req, res) => {
 
-  // Get requested path
-  const { path } = req.query;
+  // Try Catch around everything to prevent crashing
+  try {
 
-  // Default path to get unless in query
-  var getLocation = os.homedir();
+    // Get requested path
+    const { path } = req.query;
 
-  // Check to see if a path was sent
-  if (path !== undefined) {
+    // Default path to get unless in query
+    var getLocation = os.homedir();
 
-    // Use this path instead
-    getLocation = path;
+    // Check to see if a path was sent
+    if (path !== undefined) {
+
+      // Use this path instead
+      getLocation = path;
+    }
+
+    // Get folders with in the given path
+    const folders = await getDirectories(getLocation);
+
+    // Send back
+    res.send({ path: getLocation, folders: folders });
+
+  } catch (error) {
+
+    // Send back error
+    res.status(500).send({ code: 400, msg: 'Unable to read directory' });
   }
-
-  // Get folders with in the given path
-  const folders = await getDirectories(getLocation);
-
-  // Send back
-  res.send({ path: getLocation, folders: folders });
 });
 
-function getDirectories(path) {
-  return new Promise((resolve, reject) => {
-    const folders = [];
-    const all = fs.readdirSync(path);
-    for (var item of all) {
-      if (fs.lstatSync(path + '\\' + item).isDirectory()) {
-        folders.push(item);
+app.get('/api/users', async (req, res) => {
+
+  // Try Catch around everything to prevent crashing
+  try {
+
+    // Query data
+    sqlDB.all('SELECT * FROM users', [], (error, rows) => {
+
+      // Check for errors
+      if (error) {
+
+        // Something went wrong
+        res.status(500).send({ code: 400, msg: 'Unable to get users' });
+
+      } else {
+
+        // Send back data
+        res.send(rows);
       }
-    }
-    resolve(folders);
-  });
-}
+    });
+  } catch (error) {
+
+    // Send back error
+    res.status(500).send({ code: 400, msg: 'Unable to get users' });
+  }
+})
+
+app.get('/api/settings', async (req, res) => {
+
+  // Try Catch around everything to prevent crashing
+  try {
+
+    // Query data
+    sqlDB.all('SELECT * FROM settings', [], (error, rows) => {
+
+      // Check for errors
+      if (error) {
+
+        // Something went wrong
+        res.status(500).send({ code: 400, msg: 'Unable to get settings' });
+
+      } else {
+
+        // Send back data
+        res.send(rows);
+      }
+    });
+  } catch (error) {
+
+    // Send back error
+    res.status(500).send({ code: 400, msg: 'Unable to get settings' });
+  }
+})
 
 // Setup express to use the built frontend
 app.use(express.static(`${__dirname}/build`));
@@ -124,7 +211,6 @@ app.use(express.static(`${__dirname}/build`));
 app.get("*", (req, res) => {
   res.sendFile(path.resolve(__dirname, 'build', 'index.html'));
 });
-
 
 // Start express server
 app.listen(port, () => {

@@ -10,16 +10,21 @@ import { useEffect, useState } from 'react';
 import { BsArrow90DegUp, BsFolderPlus } from 'react-icons/bs';
 
 // Main
-function FolderSelector({ showModal, onClose, onSelect }) {
+function FolderSelector({ showModal, defaultPath, onClose, onSelect }) {
 
   // State
-  const [path, setPath] = useState('');
+  const [path, setPath] = useState(defaultPath);
   const [folders, setFolders] = useState([]);
 
   // On load get folders
   useEffect(() => {
     getFolders(null);
   }, []);
+
+  // On load defaultPath
+  useEffect(() => {
+    getFolders(defaultPath);
+  }, [defaultPath]);
 
   // Function to get folders
   const getFolders = (dir) => {
@@ -42,13 +47,13 @@ function FolderSelector({ showModal, onClose, onSelect }) {
       {showModal ? (
         <>
           <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none"
-            onClick={(e) => onClose(false)}
+            onClick={(e) => onClose()}
           >
             <div className="flex flex-col items-center rounded-md p-8 bg-neutral-600 h-136 w-128" onClick={(e) => e.stopPropagation()}>
               <h2 className='text-center text-2xl mb-4'>Select a folder</h2>
 
               <div className='flex flex-row justify-start mb-2 w-4/5 gap-2'>
-                <button 
+                <button
                   className='rounded-md bg-neutral-400 bg px-3 py-2'
                   onClick={(e) => {
                     var arr = path.split('\\');
@@ -76,16 +81,21 @@ function FolderSelector({ showModal, onClose, onSelect }) {
                 ))}
               </div>
 
+              <div className='flex flex-col mb-4 w-4/5'>
+                <label htmlFor="current_path" className="block text-sm font-medium leading-6 text-white">Current Location</label>
+                <input type="text" disabled={true} name="current_path" id="current_path" placeholder="C:\..." value={path} className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-300 sm:text-sm sm:leading-6 disabled:bg-white" />
+              </div>
+
               <div className='flex flex-row justify-between w-4/5'>
 
                 <button
                   className='bg-amber-400 py-3 px-5 rounded-3xl text-black'
-                  onClick={(e) => onClose(false)}
+                  onClick={(e) => onClose()}
                 >Cancel</button>
 
                 <button
                   className='bg-amber-400 py-3 px-5 rounded-3xl text-black'
-                  onClick={(e) => { }}
+                  onClick={(e) => onSelect(path)}
                 >Select</button>
               </div>
             </div>

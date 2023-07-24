@@ -11,6 +11,7 @@ import SetupStep3 from '../components/SetupStep3';
 // Icons
 import { BsArrowRight } from 'react-icons/bs';
 import { RiNumber1, RiNumber2, RiNumber3 } from 'react-icons/ri';
+import axios from 'axios';
 
 // Main
 function Setup(props) {
@@ -110,8 +111,23 @@ function Setup(props) {
     // Check to see if anything failed
     if (!fail) {
 
-      // Next step
+      // Setup body
+      const body = {
+        ...stateStep2,
+        ...stateStep3
+      };
 
+      // Next step
+      axios.post('/api/first_time_setup', body).then((response) => {
+
+        // Check response
+        
+
+      }).catch((error) => {
+
+        // Error
+        console.log(error);
+      });
     }
   };
 
