@@ -25,7 +25,7 @@ function Router(props) {
   useEffect(() => {
 
     // Check to see if this is the first time using the app
-    axios.get('/api/first_time_check').then((response) => {
+    axios.get('/api/setup').then((response) => {
 
       // Check response
       if (response.data.status === true) {

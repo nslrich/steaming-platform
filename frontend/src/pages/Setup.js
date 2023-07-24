@@ -92,20 +92,32 @@ function Setup(props) {
     // Failure check variable
     var fail = false;
 
-    // Check first name
+    // Check movie path
     if (stateStep3.movie_location === '') {
-      document.getElementById('movie_location').classList.add('border-rose-500');
+      document.getElementById('movie_location').classList.add('disabled:border-rose-500');
       fail = true;
     } else {
-      document.getElementById('movie_location').classList.remove('border-rose-500');
+      document.getElementById('movie_location').classList.remove('disabled:border-rose-500');
     }
 
-    // Check first name
+    // Check show path
     if (stateStep3.show_location === '') {
-      document.getElementById('show_location').classList.add('border-rose-500');
+      document.getElementById('show_location').classList.add('disabled:border-rose-500');
       fail = true;
     } else {
-      document.getElementById('show_location').classList.remove('border-rose-500');
+      document.getElementById('show_location').classList.remove('disabled:border-rose-500');
+    }
+
+    // Check to make sure paths are different
+    if (stateStep3.show_location !== '' && stateStep3.movie_location !== '') {
+      if (stateStep3.movie_location === stateStep3.show_location) {
+        document.getElementById('movie_location').classList.add('disabled:border-rose-500');
+        document.getElementById('show_location').classList.add('disabled:border-rose-500');
+        fail = true;
+      } else {
+        document.getElementById('movie_location').classList.remove('disabled:border-rose-500');
+        document.getElementById('show_location').classList.remove('disabled:border-rose-500');
+      }
     }
 
     // Check to see if anything failed
@@ -118,10 +130,22 @@ function Setup(props) {
       };
 
       // Next step
-      axios.post('/api/first_time_setup', body).then((response) => {
+      axios.post('/api/setup', body).then((response) => {
 
         // Check response
-        
+        if (response.data.code === 0) {
+
+          // Get auth token out of response and store it in local storage
+          // localStorage.setItem('token', response.data.token);
+
+          // Redirect to home page
+          window.location.href = `/`;
+
+        } else {
+
+          // Something went wrong.
+
+        }
 
       }).catch((error) => {
 

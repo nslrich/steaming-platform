@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 // Redux
 
 // Custom Components
+import NewFolderModal from './NewFolderModal';
 
 // Icons
 import { BsArrow90DegUp, BsFolderPlus } from 'react-icons/bs';
@@ -15,6 +16,7 @@ function FolderSelector({ showModal, defaultPath, onClose, onSelect }) {
   // State
   const [path, setPath] = useState(defaultPath);
   const [folders, setFolders] = useState([]);
+  const [showNewFolder, setShowNewFolder] = useState(false);
 
   // On load get folders
   useEffect(() => {
@@ -41,12 +43,28 @@ function FolderSelector({ showModal, defaultPath, onClose, onSelect }) {
     });
   }
 
+  // Function to create new folder
+  const newFolder = (folderName) => {
+
+    // Create folder request
+    axios.post('/api/folder', { path: path, folder_name: folderName }).then((response) => {
+
+      // Set state
+      setPath(response.data.path);
+      setFolders(response.data.folders);
+      setShowNewFolder(false);
+
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
+
   // Render
   return (
     <>
       {showModal ? (
         <>
-          <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none"
+          <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-20 outline-none focus:outline-none"
             onClick={(e) => onClose()}
           >
             <div className="flex flex-col items-center rounded-md p-8 bg-neutral-600 h-136 w-128" onClick={(e) => e.stopPropagation()}>
@@ -64,7 +82,10 @@ function FolderSelector({ showModal, defaultPath, onClose, onSelect }) {
                   <BsArrow90DegUp size={25} />
                 </button>
 
-                <button className='rounded-md bg-neutral-400 bg px-3 py-2'>
+                <button 
+                  className='rounded-md bg-neutral-400 bg px-3 py-2'
+                  onClick={(e) => setShowNewFolder(true)}
+                >
                   <BsFolderPlus size={25} />
                 </button>
               </div>
@@ -100,10 +121,16 @@ function FolderSelector({ showModal, defaultPath, onClose, onSelect }) {
               </div>
             </div>
           </div>
-          <div className="opacity-50 fixed inset-0 z-40 bg-black"></div>
+          <div className="opacity-50 fixed inset-0 z-10 bg-black"></div>
         </>
       ) : null
       }
+
+      <NewFolderModal 
+        showModal={showNewFolder}
+        onClose={() => setShowNewFolder(false)}
+        onSelect={(value) => newFolder(value)}
+      />
     </>
   )
 };

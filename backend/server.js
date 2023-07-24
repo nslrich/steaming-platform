@@ -3,10 +3,14 @@ const fs = require('fs');
 const os = require("os");
 const cors = require("cors");
 const path = require("path");
+const bcrypt = require('bcrypt');
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const bodyParser = require("body-parser");
 const sqlite3 = require('sqlite3').verbose();
+
+// Bcrypt salt rounds
+const saltRounds = 10;
 
 // Helpers
 const { checkForData, setupDatabase, checkForDbFile, newUser, updateSaveLocations } = require('./helpers/databaseHelpers');
@@ -37,7 +41,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Routes
-app.get('/api/first_time_check', async (req, res) => {
+app.get('/api/setup', async (req, res) => {
 
   // Try Catch around everything to prevent crashing
   try {
@@ -62,7 +66,7 @@ app.get('/api/first_time_check', async (req, res) => {
 });
 
 // First time setup
-app.post('/api/first_time_setup', async (req, res) => {
+app.post('/api/setup', async (req, res) => {
 
   // Try Catch around everything to prevent crashing
   try {
@@ -150,6 +154,42 @@ app.get('/api/folders', async (req, res) => {
   }
 });
 
+// Route to get folders in a given path
+app.post('/api/folder', async (req, res) => {
+
+  // Try Catch around everything to prevent crashing
+  try {
+
+    // Get requested path
+    const { path, folder_name } = req.body;
+
+    // Default path to get unless in query
+    var getLocation = os.homedir();
+
+    // Check to see if a path was sent
+    if (fs.existsSync(path)) {
+
+      // Create file in path
+      fs.mkdirSync(`${path}/${folder_name}`);
+
+      // Get folders with in the given path
+      const folders = await getDirectories(path);
+
+      // Send back
+      res.send({ path: path, folders: folders });
+
+    } else {
+
+      // Send back error
+      res.status(500).send({ code: 400, msg: 'Path is not a valid path.' });
+    }
+  } catch (error) {
+
+    // Send back error
+    res.status(500).send({ code: 400, msg: 'Unable to read directory' });
+  }
+});
+
 app.get('/api/users', async (req, res) => {
 
   // Try Catch around everything to prevent crashing
@@ -175,7 +215,7 @@ app.get('/api/users', async (req, res) => {
     // Send back error
     res.status(500).send({ code: 400, msg: 'Unable to get users' });
   }
-})
+});
 
 app.get('/api/settings', async (req, res) => {
 
@@ -202,7 +242,47 @@ app.get('/api/settings', async (req, res) => {
     // Send back error
     res.status(500).send({ code: 400, msg: 'Unable to get settings' });
   }
-})
+});
+
+app.get('/api/password', async (req, res) => {
+
+  // Try Catch around everything to prevent crashing
+  try {
+
+    const pass = req.query.pass;
+
+    const hash = await bcrypt.hash(pass, saltRounds);
+    
+    // Send back data
+    res.send(hash);
+    
+  } catch (error) {
+
+    // Send back error
+    res.status(500).send({ code: 400, msg: 'Unable to get settings' });
+  }
+});
+
+app.get('/api/compare', async (req, res) => {
+
+  // Try Catch around everything to prevent crashing
+  try {
+
+    const compareHash = '$2b$10$HACui4luRsf1yr55OjsQOuIs5SoWgH/vssAIIhABSzKWRyHAJaWNG';
+
+    const pass = req.query.pass;
+
+    const result = await bcrypt.compare(pass, compareHash);
+
+    // Send back data
+    res.send(result);
+    
+  } catch (error) {
+
+    // Send back error
+    res.status(500).send({ code: 400, msg: 'Unable to get settings' });
+  }
+});
 
 // Setup express to use the built frontend
 app.use(express.static(`${__dirname}/build`));

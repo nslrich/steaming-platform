@@ -128,7 +128,7 @@ module.exports = {
           // Check for error
           if (error) {
 
-            // Send back -1, table has not been setup
+            // Send back failure
             resolve(false);
 
           } else {
@@ -137,7 +137,7 @@ module.exports = {
             var sqlStatement = '';
 
             // Check to make sure there is data
-            if (rows.length !== 0) {
+            if (rows.length == 0) {
 
               // No data, setup insert
               sqlStatement = `INSERT INTO settings (id, movie_locaction, show_location) 
@@ -221,7 +221,7 @@ function checkForData(dbClient) {
     } else {
 
       // Send back false, file has not been setup
-      resolve(false);
+      resolve(-1);
     }
   });
 }
