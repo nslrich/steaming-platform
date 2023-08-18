@@ -7,11 +7,13 @@ import { RouterProvider } from "react-router-dom";
 import { router } from './routes';
 
 // Custom Compenents
+import Alert from '../components/Alert';
 import Login from '../pages/Login';
 import NavBar from '../components/NavBar';
 import Setup from '../pages/Setup';
 import SideBar from '../components/SideBar';
 import SplashScreen from '../pages/SplashScreen';
+
 
 // Main
 function Router(props) {
@@ -28,7 +30,7 @@ function Router(props) {
     axios.get('/api/setup').then((response) => {
 
       // Check response
-      if (response.data.status === true) {
+      if (response.data.code === 0 && response.data.status === true) {
 
         // Run first time setup
         setFirstTimeSetup(true);
@@ -43,20 +45,31 @@ function Router(props) {
         if (token !== null) {
 
           // Validate token
-          setAuthenticated(true);
-          setSplashScreen(false);
+          axios.get('/api/verify', { params: { token: token } }).then((res) => {
 
+            // All good.
+            setAuthenticated(true);
+            setSplashScreen(false);
+            
+          }).catch((error) => {
+
+            // Token is invalid
+            setAuthenticated(false);
+            setSplashScreen(false);
+          });
         } else {
 
-          // Validate token
+          // No token
           setAuthenticated(false);
           setSplashScreen(false);
         }
       }
     }).catch((error) => {
-      console.log(error);
+      
+      // Something bad happened.
+      setAuthenticated(false);
+      setSplashScreen(false);
     });
-
   }, []);
 
   // Render
@@ -68,11 +81,12 @@ function Router(props) {
           ? <Setup />
           : authenticated
             ? (
-              <>
+              <div className='h-screen bg-white dark:bg-neutral-800 flex flex-col text-gray-300 pb-3'>
+                
                 {/* Nav Bar */}
                 <NavBar />
 
-                <div className='main-content'>
+                <div className='mt-20 mx-2 flex flex-row flex-grow'>
 
                   {/* Side Bar */}
                   <SideBar />
@@ -80,10 +94,12 @@ function Router(props) {
                   {/* Routes */}
                   <RouterProvider router={router} />
                 </div>
-              </>
+              </div>
             )
             : <Login />
       }
+
+      <Alert />
     </>
   );
 };

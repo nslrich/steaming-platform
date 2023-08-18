@@ -1,5 +1,9 @@
 // NPM Imports
 const fs = require('fs');
+const bcrypt = require('bcrypt');
+
+// Bcrypt salt rounds
+const saltRounds = 10;
 
 // SQL files
 const sqlDbPath = `${process.cwd()}/databases/data.db`;
@@ -16,57 +20,109 @@ module.exports = {
   // Setup empty tables
   setupDatabase: (dbClient) => {
     return new Promise(async (resolve, reject) => {
+      try {
 
-      // Check to make sure db is setup
-      const dbCheck = await checkForData(dbClient);
-      if (dbCheck == -1) {
+        // Check to make sure db is setup
+        const dbCheck = await checkForData(dbClient);
+        if (dbCheck == -1) {
 
-        // Setup sql statement
-        const userTable = `CREATE TABLE users (
-          id TEXT NOT NULL, 
-          user_name TEXT NOT NULL, 
-          password TEXT NOT NULL, 
-          first_name TEXT, 
-          last_name TEXT, 
-          role TEXT NOT NULL
-        )`;
+          // Setup sql to create user table
+          const usersSql = `
+            CREATE TABLE users (
+              id TEXT NOT NULL, 
+              user_name TEXT NOT NULL, 
+              password TEXT NOT NULL, 
+              first_name TEXT, 
+              last_name TEXT, 
+              role TEXT NOT NULL
+            );
+          `;
 
-        // Run Statement
-        dbClient.run(userTable, (error) => {
+          // Run Query
+          await dbClient.run(usersSql);
 
-          // Check for error
-          if (error) {
-
-            // Error, something went wrong
-            resolve(false);
-
-          } else {
-
-            // Setup sql statement
-            const settingsTable = `CREATE TABLE settings (
+          // Setup sql to create settings table
+          const settingsSql = `
+            CREATE TABLE settings (
               id INTEGER NOT NULL, 
               movie_locaction TEXT NOT NULL, 
               show_location TEXT NOT NULL
-            )`;
+            );
+          `;
 
-            // Run Statement
-            dbClient.run(settingsTable, (error) => {
+          // Run Query
+          await dbClient.run(settingsSql);
 
-              // Check for error
-              if (error) {
+          // Setup sql to create movies table
+          const moviesSql = `
+            CREATE TABLE movies (
+              id TEXT NOT NULL, 
+              location TEXT NOT NULL, 
+              title TEXT,
+              description TEXT,
+              year INTEGER,
+              duration TEXT
+            );
+          `;
 
-                // Error, something went wrong
-                resolve(false);
+          // Run Query
+          await dbClient.run(moviesSql);
 
-              } else {
+          // Setup sql to create tv shows table
+          const showsSql = `
+            CREATE TABLE shows (
+              id TEXT NOT NULL, 
+              location TEXT NOT NULL, 
+              title TEXT,
+              description TEXT,
+              year INTEGER,
+              seasons INTEGER,
+              episodes INTEGER
+            );
+          `;
 
-                // Successful
-                resolve(true);
-              }
-            });
-          }
-        });
-      } else {
+          // Run Query
+          await dbClient.run(showsSql);
+
+          // Setup sql to create tv shows table
+          const showEpisodesSql = `
+            CREATE TABLE show_episode (
+              id TEXT NOT NULL,
+              show_id TEXT NOT NULL,
+              location TEXT NOT NULL, 
+              season INTEGER NOT NULL,
+              episode INTEGER NOT NULL,
+              title TEXT,
+              description TEXT,
+              duration TEXT
+            );
+          `;
+
+          // Run Query
+          await dbClient.run(showEpisodesSql);
+
+          // Setup sql to create tv shows table
+          const progressSql = `
+            CREATE TABLE progress (
+              id TEXT NOT NULL,
+              item_id TEXT NOT NULL,
+              watched INTEGER NOT NULL,
+              progress INTEGER NOT NULL
+            );
+          `;
+
+          // Run Query
+          await dbClient.run(progressSql);
+
+          // Successful
+          resolve(true);
+
+        } else {
+
+          // Error, database is not setup
+          resolve(false);
+        }
+      } catch (error) {
 
         // Error, database is not setup
         resolve(false);
@@ -82,10 +138,13 @@ module.exports = {
       const dbCheck = await checkForData(dbClient);
       if (dbCheck != -1) {
 
+        // Setup password hash
+        const hash = await bcrypt.hash(user.password, saltRounds);
+
         // Setup Sql statement
         const insert = `INSERT INTO 
           users (id, user_name, password, first_name, last_name, role)
-          VALUES ('${user.id}', '${user.user_name}', '${user.password}', '${user.first_name}', '${user.last_name}', '${user.role}');
+          VALUES ('${user.id}', '${user.user_name}', '${hash}', '${user.first_name}', '${user.last_name}', '${user.role}');
         `;
 
         // Run insert statement
@@ -101,6 +160,92 @@ module.exports = {
 
             // Successful
             resolve(true);
+          }
+        });
+      } else {
+
+        // Error, database is not setup
+        resolve(false);
+      }
+    });
+  },
+
+  // Get User
+  getUser: (dbClient, user) => {
+    return new Promise(async (resolve, reject) => {
+
+      // Check to make sure db is setup
+      const dbCheck = await checkForData(dbClient);
+      if (dbCheck == 1) {
+
+        // Setup Sql statement
+        const sql = `SELECT * FROM users WHERE user_name = '${user}'`;
+
+        // Run insert statement
+        dbClient.all(sql, [], (error, rows) => {
+
+          // Check for error
+          if (error) {
+
+            // Send back failure
+            reject(false);
+
+          } else {
+
+            // Check for data
+            if (rows.length != 0) {
+
+              // Return user
+              resolve(rows[0]);
+
+            } else {
+
+              // Error, no users are in database
+              reject(false);
+            }
+          }
+        });
+      } else {
+
+        // Error, database is not setup
+        reject(false);
+      }
+    });
+  },
+
+  // Get movie
+  getMovie: (dbClient, title, year) => {
+    return new Promise(async (resolve, reject) => {
+
+      // Check to make sure db is setup
+      const dbCheck = await checkForData(dbClient);
+      if (dbCheck == 1) {
+
+        // Setup Sql statement
+        const sql = `SELECT * FROM movies WHERE title = '${title}' AND year = ${year}`;
+
+        // Run insert statement
+        dbClient.all(sql, [], (error, rows) => {
+
+          // Check for error
+          if (error) {
+
+            // Send back failure
+            resolve(false);
+
+          } else {
+
+            // Check for data
+            if (rows.length != 0) {
+
+              // Return movie
+              resolve(rows[0]);
+
+            } else {
+
+              // Error, no users are in database
+              resolve(false);
+            }
           }
         });
       } else {

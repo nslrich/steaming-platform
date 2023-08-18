@@ -1,7 +1,11 @@
 // NPM Imports
+import axios from 'axios';
 import { useState } from 'react';
 
 // Redux
+import { useDispatch } from 'react-redux';
+import { setUser } from '../store/profile';
+import { displayAlert } from '../store/alert';
 
 // Custom Components
 import SetupStep1 from '../components/SetupStep1';
@@ -11,10 +15,12 @@ import SetupStep3 from '../components/SetupStep3';
 // Icons
 import { BsArrowRight } from 'react-icons/bs';
 import { RiNumber1, RiNumber2, RiNumber3 } from 'react-icons/ri';
-import axios from 'axios';
 
 // Main
 function Setup(props) {
+
+  // Redux
+  const dispatch = useDispatch();
 
   // State
   const [step, setStep] = useState(1);
@@ -136,7 +142,10 @@ function Setup(props) {
         if (response.data.code === 0) {
 
           // Get auth token out of response and store it in local storage
-          // localStorage.setItem('token', response.data.token);
+          localStorage.setItem('token', response.data.token);
+
+          // Store user info in redux
+          dispatch(setUser(response.data.user));
 
           // Redirect to home page
           window.location.href = `/`;
@@ -144,13 +153,12 @@ function Setup(props) {
         } else {
 
           // Something went wrong.
-
+          dispatch(displayAlert({ message: 'Something went wrong with setup. Refresh page and try again.', variant: 'failure' }));
         }
-
       }).catch((error) => {
 
         // Error
-        console.log(error);
+        dispatch(displayAlert({ message: 'Something went wrong with setup. Refresh page and try again.', variant: 'failure' }));
       });
     }
   };

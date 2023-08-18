@@ -13,7 +13,7 @@ export const content = createSlice({
       state.id = action.payload;
     },
     setTitle: (state, action) => {
-      state.title = action.title;
+      state.title = action.payload;
     },
   },
 });
