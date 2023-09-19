@@ -19,7 +19,7 @@ function Home(props) {
 
   // Render
   return (
-    <div className="flex flex-col w-full px-4 py-3">
+    <div className="flex flex-col flex-grow px-4 py-3">
       
       {/* Continue Watching */}
       <h3 className="text-lg font-medium mb-4">Continue Watching</h3>
