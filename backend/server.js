@@ -18,8 +18,8 @@ require('dotenv').config()
 
 // Helpers
 const { scanLibraries } = require('./helpers/backendHelpers');
-const { checkForData, setupDatabase, newUser, updateSaveLocations, getUser, getAllMovies, getAllShows, getShow, getShowDetails } = require('./helpers/databaseHelpers');
-const { getDirectories } = require('./helpers/generalHelpers');
+const { checkForData, setupDatabase, newUser, updateSaveLocations, getUser, getAllMovies, getAllShows, getShow, getShowDetails, getShowSeason, getMovie, getMovieById, getShowEpisodeById } = require('./helpers/databaseHelpers');
+const { getDirectories, getDrives } = require('./helpers/generalHelpers');
 
 // Declare express port
 const port = 12501;
@@ -143,6 +143,25 @@ app.post('/api/setup', async (req, res) => {
 });
 
 // Route to get folders in a given path
+app.get('/api/drives', async (req, res) => {
+
+  // Try Catch around everything to prevent crashing
+  try {
+
+    // Get drives attached to machine
+    const drives = await getDrives();
+
+    // Send back
+    res.send(drives);
+
+  } catch (error) {
+
+    // Send back error
+    res.status(500).send({ code: 400, msg: 'Unable to read directory' });
+  }
+});
+
+// Route to get folders in a given path
 app.get('/api/folders', async (req, res) => {
 
   // Try Catch around everything to prevent crashing
@@ -256,7 +275,7 @@ app.get('/api/verify', async (req, res) => {
   // Try Catch around everything to prevent crashing
   try {
 
-    // Get username and password out of body
+    // Get params out of request
     const { token } = req.query;
 
     // Verify / Decode token
@@ -278,7 +297,7 @@ app.get('/api/movies', async (req, res) => {
   // Try Catch around everything to prevent crashing
   try {
 
-    // Get username and password out of body
+    // Get params out of request
     const { token } = req.query;
 
     // Verify / Decode token
@@ -311,7 +330,7 @@ app.get('/api/shows', async (req, res) => {
   // Try Catch around everything to prevent crashing
   try {
 
-    // Get username and password out of body
+    // Get params out of request
     const { token } = req.query;
 
     // Verify / Decode token
@@ -344,7 +363,7 @@ app.get('/api/show', async (req, res) => {
   // Try Catch around everything to prevent crashing
   try {
 
-    // Get username and password out of body
+    // Get params out of request
     const { token, show_id } = req.query;
 
     // Verify / Decode token
@@ -365,6 +384,110 @@ app.get('/api/show', async (req, res) => {
       res.send({ code: 0, msg: 'OK', data: show });
     }
   } catch (error) {
+
+    // Send back error
+    res.status(500).send({ code: 400, msg: 'Invalid token.' });
+  }
+});
+
+// Route to get shows
+app.get('/api/stream/:id/:token', async (req, res) => {
+
+  // Try Catch around everything to prevent crashing
+  try {
+
+    // Get params out of request
+    const { id, token } = req.params;
+
+    // Get Headers out of query
+    const { range } = req.headers;
+
+    // Verify / Decode token
+    const result = jwt.verify(token, cryptoKey);
+
+    // Setup path
+    var filePath = null;
+
+    // Check to see if its a movie
+    const movieDetails = await getMovieById(sqlDB, id);
+    console.log(movieDetails);
+
+    // Check for error
+    if (movieDetails !== false) {
+
+      // Set file path
+      filePath = movieDetails.location;
+
+    } else {
+
+      // Check to see if its a tv episode
+      const episodeDetails = await getShowEpisodeById(sqlDB, id);
+
+      // Set file path
+      filePath = episodeDetails.location;
+    }
+
+    // Check to see if we found anything
+    if (fs.existsSync(filePath)) {
+
+      // Get file info
+      const file = fs.statSync(filePath);
+      const fileSize = file.size;
+
+      // Check to see if a range is supplied
+      if (range) {
+
+        console.log(range);
+
+        // Break out the range requested
+        const requestedRange = range.replace(/bytes=/, '').split('-');
+        const rangeStart = parseInt(requestedRange[0], 10);
+        const rangeEnd = requestedRange[1] ? parseInt(requestedRange[1], 10) : fileSize - 1;
+
+        // Setup the chucksize to been read and sent to browers
+        const chunksize = rangeEnd - rangeStart + 1;
+
+        // Setup file stream
+        const fileStream = fs.createReadStream(filePath, { start: rangeStart, end: rangeEnd });
+
+        // Setup headers
+        const headers = {
+          'Content-Range': `bytes ${rangeStart}-${rangeEnd}/${fileSize}`,
+          'Accept-Ranges': 'bytes',
+          'Content-Length': chunksize,
+          'Content-Type': 'video/mp4'
+        };
+
+        console.log(headers);
+
+        // Write headers to response
+        res.writeHead(206, headers);
+
+        // Stream data
+        fileStream.pipe(res);
+
+      } else {
+
+        // Setup headers
+        const headers = {
+          'Content-Length': fileSize,
+          'Content-Type': 'video/mp4'
+        };
+
+        // Write headers to response
+        res.writeHead(200, headers);
+
+        // Stream data
+        fs.createReadStream(filePath).pipe(res);
+      }
+    } else {
+
+      // Send back error
+      res.status(404).send({ code: 400, msg: 'Invaild movie or show episode ID.' });
+    }
+  } catch (error) {
+
+    console.log(error);
 
     // Send back error
     res.status(500).send({ code: 400, msg: 'Invalid token.' });

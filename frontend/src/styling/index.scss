@@ -2,88 +2,80 @@
 @tailwind components;
 @tailwind utilities;
 
-// :root {
+.h-calc-screen {
+  height: calc(100vh - 5rem);
+  max-height: calc(100vh - 5rem);
+}
 
-//   // Text color
-//   --primary-text-color: #FFFFFF;
-//   --secondary-text-color: rgba(255, 255, 255, 0.7);
-//   --disabled-text-color: rgba(255, 255, 255, 0.5);
+.w-calc-screen {
+  width: calc(100vw - 256px - 5rem);
+  max-width: calc(100vw - 256px - 5rem);
+}
 
-//   // Primary colors
-//   --primary-color: #FFFFFF;
+.custom-container {
+  height: calc(100vh - 6rem);
+}
 
+// Video player styling
+.video-player {
+  height: calc(100vh - 7rem);
+  position: relative;
+}
 
-//   // Background colors
-//   --primary-background-color: #212121;
-//   --secondary-background-color: #0F0F0F;
-//   --tertiary-background-color: #1A1A1A;
+// Video player controls
+.video-controls {
+  position: absolute;
+  z-index: 10;
+  width: calc(100vw - 3rem);
+  height: 100px;
+  bottom: 16px;
+  transition: all 1s;
+  background-color: aliceblue;
+}
 
-// }
+.video-controls-hidden {
+  height: 0px !important;
+}
 
-// body {
-//   margin: 0;
-//   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-//   -webkit-font-smoothing: antialiased;
-//   -moz-osx-font-smoothing: grayscale;
+// Tooltip parent
+.cstm-tooltip {
+  position: relative;
+  display: inline-block;
+}
 
+// Hide the tooltip
+.cstm-tooltip-text {
+  position: absolute;
+  visibility: hidden;
+  z-index: 10;
+}
 
-//   background-color: var(--primary-background-color);
-//   color: var(--primary-text-color);
-// }
+// Show the tooltip on hover of parent
+.cstm-tooltip:hover {
+  
+  .cstm-tooltip-text {
+    visibility: visible !important;
+  }
+}
 
-// code {
-//   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
-// }
+// Customize scroll bar
 
-// .main-content {
-//   display: flex;
-//   flex-direction: row;
-//   height: calc(100vh - 44px);
-// }
+/* Works on Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #404040;
+}
 
-// .btn {
-//   border-radius: 8px;
-//   border: 1px solid #998100;
-//   background-color: #998100;
-//   padding: 0.5rem 1rem;
-//   color: var(--primary-text-color);
-// }
+/* Works on Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 8px;
+}
 
-// .btn:hover {
-//   border-color: rgba(153, 129, 0, 0.8);
-//   background-color: rgba(153, 129, 0, 0.8);
-// }
+*::-webkit-scrollbar-track {
+  opacity: 0;
+}
 
-// .btn:disabled {
-//   border-color: rgba(153, 129, 0, 0.5);
-//   background-color: rgba(153, 129, 0, 0.5);
-//   color: rgba(255, 255, 255, 0.6);
-// }
-
-// .input-group {
-//   display: flex;
-//   flex-direction: column;
-//   margin-bottom: 0.75rem;
-
-//   label {
-//     font-size: 16px;
-//     text-align: start;
-//     margin-bottom: 4px;
-//   }
-
-//   input {
-//     border: 1px solid #212121;
-//     background-color: #EEEEEE;
-//     border-radius: 6px;
-//     padding: 8px 12px;
-//     font-size: 16px;
-//   }
-// }
-
-// .flex-grow {
-//   flex-grow: 1;
-// }
-
-// .txt-center {
-//   text-align: center;
-// }
+*::-webkit-scrollbar-thumb {
+  background-color: #404040;
+  border-radius: 20px;
+}

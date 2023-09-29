@@ -1,10 +1,10 @@
 // React Imports
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { RouterProvider } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 
 // Custon Router
-import { router } from './routes';
+import RouterRoutes from './RouterRoutes';
 
 // Custom Compenents
 import Alert from '../components/Alert';
@@ -12,8 +12,6 @@ import Login from '../pages/Login';
 import NavBar from '../components/NavBar';
 import Setup from '../pages/Setup';
 import SideBar from '../components/SideBar';
-import SplashScreen from '../pages/SplashScreen';
-
 
 // Main
 function Router(props) {
@@ -50,7 +48,7 @@ function Router(props) {
             // All good.
             setAuthenticated(true);
             setSplashScreen(false);
-            
+
           }).catch((error) => {
 
             // Token is invalid
@@ -65,7 +63,7 @@ function Router(props) {
         }
       }
     }).catch((error) => {
-      
+
       // Something bad happened.
       setAuthenticated(false);
       setSplashScreen(false);
@@ -76,24 +74,29 @@ function Router(props) {
   return (
     <>
       {splashScreen
-        ? <SplashScreen />
+        ? <div className='h-screen bg-white dark:bg-neutral-800 flex flex-col text-gray-300 pb-3'></div>
         : firstTimeSetup
           ? <Setup />
           : authenticated
             ? (
               <div className='h-screen bg-white dark:bg-neutral-800 flex flex-col text-gray-300 pb-3'>
-                
-                {/* Nav Bar */}
-                <NavBar />
 
-                <div className='mt-20 mx-2 flex flex-row flex-grow'>
+                {/* Router */}
+                <BrowserRouter>
 
-                  {/* Side Bar */}
-                  <SideBar />
+                  {/* Nav Bar */}
+                  <NavBar />
 
-                  {/* Routes */}
-                  <RouterProvider router={router} />
-                </div>
+                  <div className='mt-20 mx-2 flex flex-row flex-grow custom-container'>
+
+                    {/* Side Bar */}
+                    <SideBar />
+
+                    {/* Routes */}
+                    <RouterRoutes />
+
+                  </div>
+                </BrowserRouter>
               </div>
             )
             : <Login />

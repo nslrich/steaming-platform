@@ -28,9 +28,9 @@ function NavBar(props) {
       </div>
 
       {/* Home Button */}
-      <a href='/' className='flex justify-start items-center ml-4'>
+      <Link to='/' className='flex justify-start items-center ml-4'>
         <AiOutlineHome color='rgb(229 231 235)' size={20} />
-      </a>
+      </Link>
 
       {/* Search Bar */}
       <div className='flex justify-start items-center ml-4 flex-grow'>
@@ -39,9 +39,9 @@ function NavBar(props) {
       </div>
 
       {/* Settings */}
-      <a href='/settings' className='flex justify-start items-center mr-4'>
+      <Link to='/settings' className='flex justify-start items-center mr-4'>
         <FaWrench color='rgb(229 231 235)' size={20} />
-      </a>
+      </Link>
 
       {/* Account */}
       <div className='flex justify-start items-center'>

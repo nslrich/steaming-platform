@@ -58,6 +58,7 @@ module.exports = {
           const moviesSql = `
             CREATE TABLE movies (
               id TEXT NOT NULL, 
+              tmdb_id INTEGER NOT NULL, 
               location TEXT NOT NULL, 
               title TEXT,
               description TEXT,
@@ -65,8 +66,7 @@ module.exports = {
               duration TEXT,
               genre TEXT, 
               poster TEXT,
-              ratings_imdb TEXT,
-              ratings_rt TEXT
+              ratings_tmdb TEXT
             );
           `;
 
@@ -77,16 +77,14 @@ module.exports = {
           const showsSql = `
             CREATE TABLE shows (
               id TEXT NOT NULL, 
+              tmdb_id INTEGER NOT NULL, 
               location TEXT NOT NULL, 
               title TEXT,
               description TEXT,
               year INTEGER,
-              seasons INTEGER,
-              episodes INTEGER,
               genre TEXT, 
               poster TEXT,
-              ratings_imdb TEXT,
-              ratings_rt TEXT
+              ratings_tmdb TEXT
             );
           `;
 
@@ -97,15 +95,14 @@ module.exports = {
           const showSeasonsSql = `
             CREATE TABLE show_season (
               id TEXT NOT NULL,
+              tmdb_id INTEGER NOT NULL, 
               show_id TEXT NOT NULL,
               location TEXT NOT NULL, 
               season INTEGER NOT NULL,
-              episodes INTEGER,
               title TEXT,
               description TEXT,
               poster TEXT,
-              ratings_imdb TEXT,
-              ratings_rt TEXT
+              ratings_tmdb TEXT
             );
           `;
 
@@ -116,6 +113,7 @@ module.exports = {
           const showEpisodesSql = `
             CREATE TABLE show_episode (
               id TEXT NOT NULL,
+              tmdb_id INTEGER NOT NULL, 
               show_id TEXT NOT NULL,
               season_id TEXT NOT NULL,
               location TEXT NOT NULL, 
@@ -125,8 +123,7 @@ module.exports = {
               description TEXT,
               duration TEXT,
               poster TEXT,
-              ratings_imdb TEXT,
-              ratings_rt TEXT
+              ratings_tmdb TEXT
             );
           `;
 
@@ -254,8 +251,11 @@ module.exports = {
       const dbCheck = await checkForData(dbClient);
       if (dbCheck == 1) {
 
+        // Strip out characters in title to match lookup
+        const strippedTitle = title.replace(/:/g, '').replace(/-/g, '').replace(/'/g, '');
+
         // Setup Sql statement
-        const sql = `SELECT * FROM movies WHERE REPLACE(REPLACE(REPLACE(title, ':',''), '-', ''), '''', '') LIKE '%${title}%' AND year = ${year}`;
+        const sql = `SELECT * FROM movies WHERE REPLACE(REPLACE(REPLACE(title, ':', ''), '-', ''), '''', '') LIKE '%${strippedTitle}%' AND year = ${year}`;
 
         // Run insert statement
         dbClient.all(sql, [], (error, rows) => {
@@ -266,7 +266,48 @@ module.exports = {
             // Send back failure
             resolve(false);
 
-            console.log(error);
+          } else {
+
+            // Check for data
+            if (rows.length != 0) {
+
+              // Return movie
+              resolve(rows[0]);
+
+            } else {
+
+              // Error, no users are in database
+              resolve(false);
+            }
+          }
+        });
+      } else {
+
+        // Error, database is not setup
+        resolve(false);
+      }
+    });
+  },
+
+  // Get single movie
+  getMovieById: (dbClient, id) => {
+    return new Promise(async (resolve, reject) => {
+
+      // Check to make sure db is setup
+      const dbCheck = await checkForData(dbClient);
+      if (dbCheck == 1) {
+
+        // Setup Sql statement
+        const sql = `SELECT * FROM movies WHERE id = '${id}'`;
+
+        // Run insert statement
+        dbClient.all(sql, [], (error, rows) => {
+
+          // Check for error
+          if (error) {
+
+            // Send back failure
+            resolve(false);
 
           } else {
 
@@ -299,23 +340,22 @@ module.exports = {
       const dbCheck = await checkForData(dbClient);
       if (dbCheck == 1) {
 
-        // Get rotten tomatoes rating info out (not aways there)
-        const rtRating = data.Ratings.filter(x => x.Source == 'Rotten Tomatoes').length != 0 ?
-          `'${data.Ratings.filter(x => x.Source == 'Rotten Tomatoes')[0].Value}'` : 'NULL';
+        // Turn Genres array into string
+        const genres = data.genres.map(obj => obj.name).join(', ');
 
         // Setup sql statement
-        const sqlStatement = `INSERT INTO movies (id, location, title, description, year, duration, genre, poster, ratings_imdb, ratings_rt) 
+        const sqlStatement = `INSERT INTO movies (id, tmdb_id, location, title, description, year, duration, genre, poster, ratings_tmdb) 
           VALUES (
             '${uuidv4()}',
-            '${path}',
-            '${data.Title.replace(/'/g, "''")}',
-            '${data.Plot.replace(/'/g, "''")}',
-            ${data.Year},
-            '${data.Runtime}',
-            '${data.Genre}',
-            '${data.Poster}',
-            '${data.imdbRating}',
-            ${rtRating}
+            ${data.id},
+            '${path.replace(/'/g, "''")}',
+            '${data.title.replace(/'/g, "''")}',
+            '${data.overview.replace(/'/g, "''")}',
+            ${data.release_date.substr(0, 4)},
+            '${data.runtime}',
+            '${genres}',
+            '${process.env.TMDB_IMAGE_URL}/${data.poster_path}',
+            '${data.vote_average}'
           )
         `;
 
@@ -385,8 +425,54 @@ module.exports = {
       const dbCheck = await checkForData(dbClient);
       if (dbCheck == 1) {
 
+        // Strip out characters in title to match lookup
+        const strippedTitle = title.replace(/:/g, '').replace(/-/g, '').replace(/'/g, '');
+
         // Setup Sql statement
-        const sql = `SELECT * FROM shows WHERE REPLACE(REPLACE(REPLACE(title, ':',''), '-', ''), '''', '') LIKE '%${title}%' AND year = ${year}`;
+        const sql = `SELECT * FROM shows WHERE REPLACE(REPLACE(REPLACE(title, ':',''), '-', ''), '''', '') LIKE '%${strippedTitle}%' AND year = ${year}`;
+
+        // Run insert statement
+        dbClient.all(sql, [], (error, rows) => {
+
+          // Check for error
+          if (error) {
+
+            // Send back failure
+            resolve(false);
+
+          } else {
+
+            // Check for data
+            if (rows.length != 0) {
+
+              // Return movie
+              resolve(rows[0]);
+
+            } else {
+
+              // Error, no users are in database
+              resolve(false);
+            }
+          }
+        });
+      } else {
+
+        // Error, database is not setup
+        resolve(false);
+      }
+    });
+  },
+
+  // Get a single show
+  getShowById: (dbClient, id) => {
+    return new Promise(async (resolve, reject) => {
+
+      // Check to make sure db is setup
+      const dbCheck = await checkForData(dbClient);
+      if (dbCheck == 1) {
+
+        // Setup Sql statement
+        const sql = `SELECT * FROM shows WHERE id = '${id}'`;
 
         // Run insert statement
         dbClient.all(sql, [], (error, rows) => {
@@ -428,27 +514,21 @@ module.exports = {
       const dbCheck = await checkForData(dbClient);
       if (dbCheck == 1) {
 
-        // Get rotten tomatoes rating info out (not aways there)
-        const rtRating = data.Ratings.filter(x => x.Source == 'Rotten Tomatoes').length != 0 ?
-          `'${data.Ratings.filter(x => x.Source == 'Rotten Tomatoes')[0].Value}'` : 'NULL';
-
-        // Get IMDB rating info out (not aways there)
-        const imdbRating = data.imdbRating != 'N/A' ? `'${data.imdbRating}'` : 'NULL';
+        // Turn Genres array into string
+        const genres = data.genres.map(obj => obj.name).join(', ');
 
         // Setup sql statement
-        const sqlStatement = `INSERT INTO shows (id, location, title, description, year, seasons, episodes, genre, poster, ratings_imdb, ratings_rt) 
+        const sqlStatement = `INSERT INTO shows (id, tmdb_id, location, title, description, year, genre, poster, ratings_tmdb) 
           VALUES (
             '${uuidv4()}',
-            '${path}',
-            '${data.Title.replace(/'/g, "''")}',
-            '${data.Plot.replace(/'/g, "''")}',
-            ${data.Year.replace(/–/g, '')},
-            ${data.totalSeasons},
-            0,
-            '${data.Genre}',
-            '${data.Poster}',
-            ${imdbRating},
-            ${rtRating}
+            ${data.id},
+            '${path.replace(/'/g, "''")}',
+            '${data.name.replace(/'/g, "''")}',
+            '${data.overview.replace(/'/g, "''")}',
+            ${data.first_air_date.substr(0, 4)},
+            '${genres}',
+            '${process.env.TMDB_IMAGE_URL}/${data.poster_path}',
+            '${data.vote_average}'
           )
         `;
 
@@ -639,6 +719,49 @@ module.exports = {
     });
   },
 
+  // Get a single show
+  getShowSeasonById: (dbClient, id) => {
+    return new Promise(async (resolve, reject) => {
+
+      // Check to make sure db is setup
+      const dbCheck = await checkForData(dbClient);
+      if (dbCheck == 1) {
+
+        // Setup Sql statement
+        const sql = `SELECT * FROM show_season WHERE id = '${id}'`;
+
+        // Run insert statement
+        dbClient.all(sql, [], (error, rows) => {
+
+          // Check for error
+          if (error) {
+
+            // Send back failure
+            resolve(false);
+
+          } else {
+
+            // Check for data
+            if (rows.length != 0) {
+
+              // Return movie
+              resolve(rows[0]);
+
+            } else {
+
+              // Error, no users are in database
+              resolve(false);
+            }
+          }
+        });
+      } else {
+
+        // Error, database is not setup
+        resolve(false);
+      }
+    });
+  },
+
   // Add a single show to the database
   addShowSeason: (dbClient, data, path, show_id) => {
     return new Promise(async (resolve, reject) => {
@@ -648,18 +771,17 @@ module.exports = {
       if (dbCheck == 1) {
 
         // Setup sql statement
-        const sqlStatement = `INSERT INTO show_season (id, show_id, location, season, episodes, title, description, poster, ratings_imdb, ratings_rt) 
+        const sqlStatement = `INSERT INTO show_season (id, tmdb_id, show_id, location, season, title, description, poster, ratings_tmdb) 
           VALUES (
             '${uuidv4()}',
+            ${data.id},
             '${show_id}',
-            '${path}',
-            ${data.Season},
-            0,
-            NULL,
-            NULL,
-            NULL,
-            NULL,
-            NULL
+            '${path.replace(/'/g, "''")}',
+            ${data.season_number},
+            '${data.name.replace(/'/g, "''")}',
+            '${data.overview.replace(/'/g, "''")}',
+            '${process.env.TMDB_IMAGE_URL}/${data.poster_path}',
+            '${data.vote_average}'
           )
         `;
 
@@ -730,6 +852,49 @@ module.exports = {
     });
   },
 
+  // Get a single show
+  getShowEpisodeById: (dbClient, id) => {
+    return new Promise(async (resolve, reject) => {
+
+      // Check to make sure db is setup
+      const dbCheck = await checkForData(dbClient);
+      if (dbCheck == 1) {
+
+        // Setup Sql statement
+        const sql = `SELECT * FROM show_episode WHERE id = '${id}'`;
+
+        // Run insert statement
+        dbClient.all(sql, [], (error, rows) => {
+
+          // Check for error
+          if (error) {
+
+            // Send back failure
+            resolve(false);
+
+          } else {
+
+            // Check for data
+            if (rows.length != 0) {
+
+              // Return movie
+              resolve(rows[0]);
+
+            } else {
+
+              // Error, no users are in database
+              resolve(false);
+            }
+          }
+        });
+      } else {
+
+        // Error, database is not setup
+        resolve(false);
+      }
+    });
+  },
+
   // Add a single show to the database
   addShowEpisode: (dbClient, data, path, show_id, season_id) => {
     return new Promise(async (resolve, reject) => {
@@ -738,28 +903,21 @@ module.exports = {
       const dbCheck = await checkForData(dbClient);
       if (dbCheck == 1) {
 
-        // Get rotten tomatoes rating info out (not aways there)
-        const rtRating = data.Ratings.filter(x => x.Source == 'Rotten Tomatoes').length != 0 ?
-          `'${data.Ratings.filter(x => x.Source == 'Rotten Tomatoes')[0].Value}'` : 'NULL';
-
-        // Get IMDB rating info out (not aways there)
-        const imdbRating = data.imdbRating != 'N/A' ? `'${data.imdbRating}'` : 'NULL';
-
         // Setup sql statement
-        const sqlStatement = `INSERT INTO show_episode (id, show_id, season_id, location, season, episode, title, description, duration, poster, ratings_imdb, ratings_rt) 
+        const sqlStatement = `INSERT INTO show_episode (id, tmdb_id, show_id, season_id, location, season, episode, title, description, duration, poster, ratings_tmdb) 
           VALUES (
             '${uuidv4()}',
+            ${data.id},
             '${show_id}',
             '${season_id}',
-            '${path}',
-            ${data.Season},
-            ${data.Episode},
-            '${data.Title.replace(/'/g, "''")}',
-            '${data.Plot.replace(/'/g, "''")}',
-            '${data.Runtime}',
-            '${data.Poster}',
-            ${imdbRating},
-            ${rtRating}
+            '${path.replace(/'/g, "''")}',
+            ${data.season_number},
+            ${data.episode_number},
+            '${data.name.replace(/'/g, "''")}',
+            '${data.overview.replace(/'/g, "''")}',
+            '${data.runtime}',
+            '${process.env.TMDB_IMAGE_URL}/${data.still_path}',
+            '${data.vote_average}'
           )
         `;
 

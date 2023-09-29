@@ -1,5 +1,5 @@
 // NPM Imports
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 // Redux
 import { useDispatch, useSelector } from "react-redux";
@@ -21,7 +21,7 @@ function Alert(props) {
   const variant = useSelector((state) => state.alert.variant);
 
   // On change of show
-  useEffect(() => { console.log(show);
+  useEffect(() => {
 
     // Get the div by id
     const alert = document.getElementById('alert');
@@ -48,7 +48,7 @@ function Alert(props) {
   }, [show]);
   
   // On change of variant change the classname to include the correct color
-  useEffect(() => { console.log(variant);
+  useEffect(() => {
 
     // Get the div by id
     const alert = document.getElementById('alert-box');

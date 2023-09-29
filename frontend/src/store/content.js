@@ -5,21 +5,30 @@ import { createSlice } from '@reduxjs/toolkit';
 export const content = createSlice({
   name: 'content',
   initialState: {
-    id: null,
-    title: null,
+    movie: {},
+    show: {},
+    seasons: [],
+    episodes: []
   },
   reducers: {
-    setID: (state, action) => {
-      state.id = action.payload;
+    setContent: (state, action) => {
+      state.movie = action.payload.movie === undefined ? {} : action.payload.movie;
+      state.show = action.payload.show === undefined ? {} : action.payload.show;
+      state.seasons = action.payload.seasons === undefined ? [] : action.payload.seasons;
+      state.episodes = action.payload.episodes === undefined ? [] : action.payload.episodes;
     },
-    setTitle: (state, action) => {
-      state.title = action.payload;
-    },
+    clearContent: (state, action) => {
+      state = {
+        show: null,
+        seasons: null,
+        episodes: null,
+      }
+    }
   },
 });
 
 // Functions to change state
-export const { setID, setTitle } = content.actions;
+export const { setContent, clearContent } = content.actions;
 
 // Default export for store creation
 export default content.reducer;

@@ -15,11 +15,13 @@ function FolderSelector({ showModal, defaultPath, onClose, onSelect }) {
 
   // State
   const [path, setPath] = useState(defaultPath);
+  const [drives, setDrives] = useState([]);
   const [folders, setFolders] = useState([]);
   const [showNewFolder, setShowNewFolder] = useState(false);
 
   // On load get folders
   useEffect(() => {
+    getDrives();
     getFolders(null);
   }, []);
 
@@ -27,6 +29,20 @@ function FolderSelector({ showModal, defaultPath, onClose, onSelect }) {
   useEffect(() => {
     getFolders(defaultPath);
   }, [defaultPath]);
+
+  // Function to get folders
+  const getDrives = () => {
+
+    // Get request
+    axios.get('/api/drives').then((response) => {
+
+      // Set state
+      setDrives(response.data);
+
+    }).catch((error) => {
+      console.log(error);
+    });
+  }
 
   // Function to get folders
   const getFolders = (dir) => {
@@ -64,42 +80,77 @@ function FolderSelector({ showModal, defaultPath, onClose, onSelect }) {
     <>
       {showModal ? (
         <>
+
+          {/* Modal Container */}
           <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-20 outline-none focus:outline-none"
             onClick={(e) => onClose()}
           >
-            <div className="flex flex-col items-center rounded-md p-8 bg-neutral-600 h-136 w-128" onClick={(e) => e.stopPropagation()}>
+
+            {/* Modal Window */}
+            <div className="flex flex-col items-center rounded-md p-8 bg-neutral-600 h-136 w-136" onClick={(e) => e.stopPropagation()}>
+
+              {/* Title */}
               <h2 className='text-center text-2xl mb-4'>Select a folder</h2>
 
-              <div className='flex flex-row justify-start mb-2 w-4/5 gap-2'>
-                <button
-                  className='rounded-md bg-neutral-400 bg px-3 py-2'
-                  onClick={(e) => {
-                    var arr = path.split('\\');
-                    arr.pop();
-                    getFolders(arr.join('\\'));
-                  }}
-                >
-                  <BsArrow90DegUp size={25} />
-                </button>
+              <div className='flex flex-row gap-2 w-4/5 h-96'>
 
-                <button 
-                  className='rounded-md bg-neutral-400 bg px-3 py-2'
-                  onClick={(e) => setShowNewFolder(true)}
-                >
-                  <BsFolderPlus size={25} />
-                </button>
-              </div>
+                {/* Drives List */}
+                <div className='flex flex-col w-1/4'>
 
-              <div className="flex flex-col grow rounded-md bg-neutral-300 w-4/5 mb-4 p-1 overflow-auto text-black">
-                {folders.map((value, index) => (
-                  <div
-                    key={`folder-${index}`}
-                    className='hover:bg-neutral-400 cursor-pointer'
-                    onClick={(e) => getFolders(path + '\\' + value)}
-                  >
-                    {value}
+                  {/* Sub Title */}
+                  <h2 className='text-md mb-6'>Drives</h2>
+
+                  {/* List Drives */}
+                  <div className="flex flex-col grow rounded-md bg-neutral-300 w-4/5 mb-4 p-1 overflow-auto text-black">
+                    {drives.map((value, index) => (
+                      <div
+                        key={`folder-${index}`}
+                        className={path.startsWith(value) ? 'bg-amber-400 hover:bg-neutral-400 cursor-pointer rounded px-1' : 'hover:bg-neutral-400 cursor-pointer rounded px-1'}
+                        onClick={(e) => getFolders(value + '\\')}
+                      >
+                        {value}
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
+
+                {/* Folders List */}
+                <div className='flex flex-col w-3/4'>
+
+                  {/* Buttons */}
+                  <div className='flex flex-row justify-start mb-2 gap-2'>
+                    <button
+                      className='rounded-md bg-neutral-400 bg px-3 py-2'
+                      onClick={(e) => {
+                        var arr = path.split('\\');
+                        arr.pop();
+                        getFolders(arr.join('\\'));
+                      }}
+                    >
+                      <BsArrow90DegUp size={25} />
+                    </button>
+
+                    <button
+                      className='rounded-md bg-neutral-400 bg px-3 py-2'
+                      onClick={(e) => setShowNewFolder(true)}
+                    >
+                      <BsFolderPlus size={25} />
+                    </button>
+                  </div>
+
+                  {/* List out folders */}
+                  <div className="flex flex-col grow rounded-md bg-neutral-300 mb-4 p-1 overflow-auto text-black">
+                    {folders.map((value, index) => (
+                      <div
+                        key={`folder-${index}`}
+                        className='hover:bg-neutral-400 cursor-pointer rounded px-1'
+                        onClick={(e) => getFolders(path + '\\' + value)}
+                      >
+                        {value}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className='flex flex-col mb-4 w-4/5'>
@@ -126,7 +177,7 @@ function FolderSelector({ showModal, defaultPath, onClose, onSelect }) {
       ) : null
       }
 
-      <NewFolderModal 
+      <NewFolderModal
         showModal={showNewFolder}
         onClose={() => setShowNewFolder(false)}
         onSelect={(value) => newFolder(value)}

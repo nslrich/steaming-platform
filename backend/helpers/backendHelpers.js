@@ -95,13 +95,23 @@ function checkForMovies(dbClient, path) {
         if (movieData == false) {
 
           // No match get new data
-          const movieInfo = await lookupInfo(title, year, 'movie');
+          const movieInfo = await lookupMovieTMDB(title, year);
 
           // Check result
-          if (movieInfo.Response == 'True') {
+          if (movieInfo !== false) {
 
-            // Add movie to database
-            addMovie(dbClient, movieInfo, path + '\\' + file);
+            // Get tmdb id out
+            const tmdbID = movieInfo.results[0].id;
+
+            // Look up details on show
+            const movieDetails = await lookupMovieDetailsTMDB(tmdbID);
+
+            // Check result
+            if (movieDetails !== false) {
+
+              // Add movie to database
+              addMovie(dbClient, movieDetails, file);
+            }
           }
         }
       }
@@ -160,7 +170,6 @@ function checkForShows(dbClient, path) {
         const episodeString = seasonAndEpisodeArr[1];
         const episodeNumber = parseInt(seasonAndEpisodeArr[1]);
 
-
         // Check database to see if this movie has already been added
         var showData = await getShow(dbClient, title, year);
 
@@ -168,16 +177,26 @@ function checkForShows(dbClient, path) {
         if (showData == false) {
 
           // No match get new data
-          const showInfo = await lookupInfo(title, year, 'series');
+          const showInfo = await lookupShowTMDB(title, year);
 
           // Check result
-          if (showInfo.Response == 'True') {
+          if (showInfo !== false) {
 
-            // Add show to database
-            await addShow(dbClient, showInfo, path + '\\' + folderName);
+            // Get tmdb id out
+            const tmdbID = showInfo.results[0].id;
 
-            // Refresh show data
-            showData = await getShow(dbClient, title, year);
+            // Look up details on show
+            const showDetails = await lookupShowDetailsTMDB(tmdbID);
+
+            // Check result
+            if (showDetails !== false) {
+
+              // Add show to database
+              await addShow(dbClient, showDetails, path + '\\' + folderName);
+
+              // Refresh show data
+              showData = await getShow(dbClient, title, year);
+            }
           }
         }
 
@@ -188,13 +207,13 @@ function checkForShows(dbClient, path) {
         if (showData != false && seasonData == false) {
 
           // No match get new data
-          const showInfo = await lookupInfo(title, year, 'series', seasonNumber);
+          const seasonInfo = await lookupShowSeasonDetailsTMDB(showData.tmdb_id, seasonNumber);
 
           // Check result
-          if (showInfo.Response == 'True') {
+          if (seasonInfo !== false) {
 
             // Add show to database
-            await addShowSeason(dbClient, showInfo, path + '\\' + folderName + '\\' + seasonFolder, showData.id);
+            await addShowSeason(dbClient, seasonInfo, path + '\\' + folderName + '\\' + seasonFolder, showData.id);
 
             // Refresh season data
             seasonData = await getShowSeason(dbClient, showData.id, seasonNumber);
@@ -208,13 +227,13 @@ function checkForShows(dbClient, path) {
         if (showData != false && seasonData != false && episdoeData == false) {
 
           // No match get new data
-          const showInfo = await lookupInfo(title, year, 'series', seasonNumber, episodeNumber);
+          const episodeInfo = await lookupShowSeasonEpisodeDetailsTMDB(showData.tmdb_id, seasonNumber, episodeNumber);
 
           // Check result
-          if (showInfo.Response == 'True') {
-            
+          if (episodeInfo !== false) {
+
             // Add show to database
-            await addShowEpisode(dbClient, showInfo, path + '\\' + folderName + '\\' + seasonFolder + '\\' + fileName, showData.id, seasonData.id);
+            await addShowEpisode(dbClient, episodeInfo, path + '\\' + folderName + '\\' + seasonFolder + '\\' + fileName, showData.id, seasonData.id);
           }
         }
       }
@@ -271,30 +290,189 @@ function scanFolder(folder) {
 }
 
 // Function to look up movie or show using API
-function lookupInfo(title, year, type, season, episode) {
+function lookupMovieTMDB(title, year) {
   return new Promise((resolve, reject) => {
 
     // Setup request params
     const params = {
-      t: title,
-      y: year,
-      type: type,
-      plot: 'full',
-      apikey: process.env.OMDB_API_KEY,
+      query: title,
+      year: year,
+      include_adult: true,
+      language: 'en-US'
     }
 
-    // Check to see if season needs to be added
-    if (season != undefined) {
-      params['season'] = season;
-    }
-
-    // Check to see if episode needs to be added
-    if (episode != undefined) {
-      params['episode'] = episode;
+    // Setup Headers
+    const headers = {
+      accept: 'application/json',
+      Authorization: `Bearer ${process.env.TMDB_API_KEY}`
     }
 
     // Run get request
-    axios.get(process.env.OMDB_API_URL, { params: params }).then((res) => {
+    axios.get(`${process.env.TMDB_API_URL}/search/movie`, { headers: headers, params: params }).then((res) => {
+
+      // Check to make sure there is data
+      if (res.data.results.length != 0) {
+
+        // Return data
+        resolve(res.data);
+
+      } else {
+
+        // Something went wrong.
+        resolve(false);
+      }
+    }).catch((error) => {
+
+      // Something went wrong.
+      resolve(false);
+    });
+  });
+}
+
+// Function to look up movie or show using API
+function lookupMovieDetailsTMDB(tmdbID) {
+  return new Promise((resolve, reject) => {
+
+    // Setup request params
+    const params = {
+      language: 'en-US'
+    }
+
+    // Setup Headers
+    const headers = {
+      accept: 'application/json',
+      Authorization: `Bearer ${process.env.TMDB_API_KEY}`
+    }
+
+    // Run get request
+    axios.get(`${process.env.TMDB_API_URL}/movie/${tmdbID}`, { headers: headers, params: params }).then((res) => {
+
+      // Return data
+      resolve(res.data);
+
+    }).catch((error) => {
+
+      // Something went wrong.
+      resolve(false);
+    });
+  });
+}
+
+// Function to look up movie or show using API
+function lookupShowTMDB(title, year) {
+  return new Promise((resolve, reject) => {
+
+    // Setup request params
+    const params = {
+      query: title,
+      year: year,
+      include_adult: true,
+      language: 'en-US'
+    }
+
+    // Setup Headers
+    const headers = {
+      accept: 'application/json',
+      Authorization: `Bearer ${process.env.TMDB_API_KEY}`
+    }
+
+    // Run get request
+    axios.get(`${process.env.TMDB_API_URL}/search/tv`, { headers: headers, params: params }).then((res) => {
+
+      // Check to make sure there is data
+      if (res.data.results.length != 0) {
+
+        // Return data
+        resolve(res.data);
+
+      } else {
+
+        // Something went wrong.
+        resolve(false);
+      }
+    }).catch((error) => {
+
+      // Something went wrong.
+      resolve(false);
+    });
+  });
+}
+
+// Function to look up movie or show using API
+function lookupShowDetailsTMDB(tmdbID) {
+  return new Promise((resolve, reject) => {
+
+    // Setup request params
+    const params = {
+      language: 'en-US'
+    }
+
+    // Setup Headers
+    const headers = {
+      accept: 'application/json',
+      Authorization: `Bearer ${process.env.TMDB_API_KEY}`
+    }
+
+    // Run get request
+    axios.get(`${process.env.TMDB_API_URL}/tv/${tmdbID}`, { headers: headers, params: params }).then((res) => {
+
+      // Return data
+      resolve(res.data);
+
+    }).catch((error) => {
+
+      // Something went wrong.
+      resolve(false);
+    });
+  });
+}
+
+// Function to look up movie or show using API
+function lookupShowSeasonDetailsTMDB(tmdbID, seasonNumber) {
+  return new Promise((resolve, reject) => {
+
+    // Setup request params
+    const params = {
+      language: 'en-US'
+    }
+
+    // Setup Headers
+    const headers = {
+      accept: 'application/json',
+      Authorization: `Bearer ${process.env.TMDB_API_KEY}`
+    }
+
+    // Run get request
+    axios.get(`${process.env.TMDB_API_URL}/tv/${tmdbID}/season/${seasonNumber}`, { headers: headers, params: params }).then((res) => {
+
+      // Return data
+      resolve(res.data);
+
+    }).catch((error) => {
+
+      // Something went wrong.
+      resolve(false);
+    });
+  });
+}
+
+// Function to look up movie or show using API
+function lookupShowSeasonEpisodeDetailsTMDB(tmdbID, seasonNumber, episodeNumber) {
+  return new Promise((resolve, reject) => {
+
+    // Setup request params
+    const params = {
+      language: 'en-US'
+    }
+
+    // Setup Headers
+    const headers = {
+      accept: 'application/json',
+      Authorization: `Bearer ${process.env.TMDB_API_KEY}`
+    }
+
+    // Run get request
+    axios.get(`${process.env.TMDB_API_URL}/tv/${tmdbID}/season/${seasonNumber}/episode/${episodeNumber}`, { headers: headers, params: params }).then((res) => {
 
       // Return data
       resolve(res.data);
