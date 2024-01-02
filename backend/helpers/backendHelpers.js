@@ -162,11 +162,11 @@ function checkForShows(dbClient, path) {
 
         // Split file name up
         const fileName = fileArray[2];
-        const index = fileName.indexOf('S' + seasonString);
+        const index = fileName.toUpperCase().indexOf('S' + seasonString);
         const fileNameSub = fileName.substr(index);
         const index2 = fileNameSub.indexOf('.');
         const seasonAndEpisode = fileNameSub.substring(0, index2);
-        const seasonAndEpisodeArr = seasonAndEpisode.split('E');
+        const seasonAndEpisodeArr = seasonAndEpisode.toUpperCase().split('E');
         const episodeString = seasonAndEpisodeArr[1];
         const episodeNumber = parseInt(seasonAndEpisodeArr[1]);
 

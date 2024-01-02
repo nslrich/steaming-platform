@@ -324,6 +324,39 @@ app.get('/api/movies', async (req, res) => {
   }
 });
 
+// Route to get movies
+app.get('/api/movie', async (req, res) => {
+
+  // Try Catch around everything to prevent crashing
+  try {
+
+    // Get params out of request
+    const { token, movie_id } = req.query;
+
+    // Verify / Decode token
+    const result = jwt.verify(token, cryptoKey);
+
+    // Get a list of all movies
+    const movie = await getMovieById(sqlDB, movie_id);
+
+    // Check for errors
+    if (movie == false) {
+
+      // Something went wrong
+      res.status(500).send({ code: 400, msg: 'Unable to get movies.' });
+
+    } else {
+
+      // Send back user data + token
+      res.send({ code: 0, msg: 'OK', data: movie });
+    }
+  } catch (error) {
+
+    // Send back error
+    res.status(500).send({ code: 400, msg: 'Invalid token.' });
+  }
+});
+
 // Route to get shows
 app.get('/api/shows', async (req, res) => {
 
@@ -410,7 +443,6 @@ app.get('/api/stream/:id/:token', async (req, res) => {
 
     // Check to see if its a movie
     const movieDetails = await getMovieById(sqlDB, id);
-    console.log(movieDetails);
 
     // Check for error
     if (movieDetails !== false) {
@@ -437,8 +469,6 @@ app.get('/api/stream/:id/:token', async (req, res) => {
       // Check to see if a range is supplied
       if (range) {
 
-        console.log(range);
-
         // Break out the range requested
         const requestedRange = range.replace(/bytes=/, '').split('-');
         const rangeStart = parseInt(requestedRange[0], 10);
@@ -457,8 +487,6 @@ app.get('/api/stream/:id/:token', async (req, res) => {
           'Content-Length': chunksize,
           'Content-Type': 'video/mp4'
         };
-
-        console.log(headers);
 
         // Write headers to response
         res.writeHead(206, headers);

@@ -1,3 +1,4 @@
+/* Import all Tailwind CSS */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -16,13 +17,13 @@
   height: calc(100vh - 6rem);
 }
 
-// Video player styling
+/* Video player styling */
 .video-player {
   height: calc(100vh - 7rem);
   position: relative;
 }
 
-// Video player controls
+/* Video player controls */
 .video-controls {
   position: absolute;
   z-index: 10;
@@ -31,7 +32,7 @@
   bottom: 16px;
 }
 
-// Progress bar for video player
+/* Progress bar for video player */
 .video-progress {
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -59,55 +60,4 @@
   width: 10px;
   border-radius: 50%;
   background-color: rgb(251 191 36);
-}
-
-// .video-progress::-webkit-slider-runnable-track {
-//   background-color: rgb(251 191 36);
-// }
-
-// .video-progress::-moz-range-track {
-//   background-color: rgb(251 191 36);
-// }
-
-// Tooltip parent
-.cstm-tooltip {
-  position: relative;
-  display: inline-block;
-}
-
-// Hide the tooltip
-.cstm-tooltip-text {
-  position: absolute;
-  visibility: hidden;
-  z-index: 10;
-}
-
-// Show the tooltip on hover of parent
-.cstm-tooltip:hover {
-
-  .cstm-tooltip-text {
-    visibility: visible !important;
-  }
-}
-
-// Customize scroll bar
-
-/* Works on Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #404040;
-}
-
-/* Works on Chrome, Edge, and Safari */
-*::-webkit-scrollbar {
-  width: 8px;
-}
-
-*::-webkit-scrollbar-track {
-  opacity: 0;
-}
-
-*::-webkit-scrollbar-thumb {
-  background-color: #404040;
-  border-radius: 20px;
 }
